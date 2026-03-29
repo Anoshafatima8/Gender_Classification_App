@@ -8,7 +8,7 @@ st.set_page_config(page_title="Gender Classifier", page_icon="👤")
 st.sidebar.markdown(f"""
 ### Student Details
 **Name:** Anosha Fatima  
-**Roll No:** [Your Roll Number]
+**Roll No:** SP23-BCS-133
 """)
 
 st.title("👤 Gender Classification App")
