@@ -1,97 +1,61 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c5a88a8e-5988-45ea-93cd-2ef7dd2e6902",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import streamlit as st\n",
-    "import pickle\n",
-    "import pandas as pd\n",
-    "import os\n",
-    "\n",
-    "# 1. Page Configuration\n",
-    "st.set_page_config(page_title=\"Gender Classifier\", page_icon=\"👤\")\n",
-    "\n",
-    "# 2. Sidebar with Student Info\n",
-    "st.sidebar.title(\"Student Details\")\n",
-    "st.sidebar.markdown(\"\"\"\n",
-    "**Name:** Anosha Fatima  \n",
-    "**Roll No:** [Your Roll Number]  \n",
-    "**Project:** Gender Classification (NLP)\n",
-    "\"\"\")\n",
-    "\n",
-    "# 3. Automatic Path Finder (The Safe Part)\n",
-    "# This finds the folder where app.py is saved on the cloud\n",
-    "base_path = os.path.dirname(__file__)\n",
-    "\n",
-    "model_path = os.path.join(base_path, 'gender_model.pkl')\n",
-    "tfidf_path = os.path.join(base_path, 'tfidf_vectorizer.pkl')\n",
-    "\n",
-    "# 4. Load the Trained Model with Error Handling\n",
-    "@st.cache_resource\n",
-    "def load_assets():\n",
-    "    if not os.path.exists(model_path) or not os.path.exists(tfidf_path):\n",
-    "        return None, None\n",
-    "    \n",
-    "    with open(model_path, 'rb') as f:\n",
-    "        model = pickle.load(f)\n",
-    "    with open(tfidf_path, 'rb') as f:\n",
-    "        tfidf = pickle.load(f)\n",
-    "    return model, tfidf\n",
-    "\n",
-    "model, tfidf = load_assets()\n",
-    "\n",
-    "# 5. Main Interface\n",
-    "st.title(\"👤 Gender Classification App\")\n",
-    "st.write(\"Predict gender based on text using Machine Learning.\")\n",
-    "st.markdown(\"---\")\n",
-    "\n",
-    "if model is None:\n",
-    "    st.error(f\"❌ Error: Model files not found! Looking for: {model_path}\")\n",
-    "    st.info(\"Make sure 'gender_model.pkl' and 'tfidf_vectorizer.pkl' are in the same GitHub folder as app.py\")\n",
-    "else:\n",
-    "    # 6. Prediction UI\n",
-    "    user_input = st.text_area(\"Enter Text (Tweet or Bio):\", placeholder=\"e.g., I love reading books about history...\")\n",
-    "\n",
-    "    if st.button(\"Predict Gender\"):\n",
-    "        if user_input.strip():\n",
-    "            # Process and Predict\n",
-    "            vect = tfidf.transform([user_input])\n",
-    "            prediction = model.predict(vect)\n",
-    "            \n",
-    "            # Show Result\n",
-    "            st.success(f\"### Predicted Result: {prediction[0]}\")\n",
-    "            st.balloons()\n",
-    "        else:\n",
-    "            st.warning(\"Please enter some text first.\")\n",
-    "\n",
-    "st.markdown(\"---\")\n",
-    "st.caption(\"AI/ML Project Deployment - Streamlit Cloud\")"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python (NLP)",
-   "language": "python",
-   "name": "nlp_env"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.13.5"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+import streamlit as st
+import pickle
+import os
+
+# 1. Page Header
+st.set_page_config(page_title="Gender Classifier", page_icon="👤")
+
+st.sidebar.markdown(f"""
+### Student Details
+**Name:** Anosha Fatima  
+**Roll No:** [Your Roll Number]
+""")
+
+st.title("👤 Gender Classification App")
+
+# 2. HELPER FUNCTION TO FIND FILES
+def find_file(name):
+    """Search for the file in the current directory and subdirectories."""
+    if os.path.exists(name):
+        return name
+    # Search subdirectories just in case
+    for root, dirs, files in os.walk("."):
+        if name in files:
+            return os.path.join(root, name)
+    return None
+
+# 3. LOAD MODELS
+model_file = find_file('gender_model.pkl')
+tfidf_file = find_file('tfidf_vectorizer.pkl')
+
+if model_file and tfidf_file:
+    with open(model_file, 'rb') as f:
+        model = pickle.load(f)
+    with open(tfidf_file, 'rb') as f:
+        tfidf = pickle.load(f)
+    
+    # --- Prediction UI ---
+    user_input = st.text_area("Enter Text:", placeholder="Type a tweet or bio here...")
+    
+    if st.button("Predict"):
+        if user_input.strip():
+            vect = tfidf.transform([user_input])
+            prediction = model.predict(vect)
+            st.success(f"### Result: {prediction[0]}")
+            st.balloons()
+        else:
+            st.warning("Please enter some text.")
+else:
+    # 4. ERROR DIAGNOSIS (This helps you see what is wrong)
+    st.error("❌ Model Files Not Found!")
+    st.write("Current files in your repository:")
+    # List all files so you can see exactly what GitHub sees
+    all_files = []
+    for root, dirs, files in os.walk("."):
+        for f in files:
+            all_files.append(os.path.join(root, f))
+    st.code("\n".join(all_files))
+    st.info("Check the list above. If you see 'gender_model.pkl.pkl', rename it on GitHub!")
+
+st.markdown("---")
+st.caption("Deployment Task - Streamlit Cloud")
